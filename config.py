@@ -2,6 +2,7 @@ import configparser
 import os
 
 model_list = [
+    'dify',
     'gpt-3.5-turbo-1106',
     'gpt-4-1106-preview',
     'chatglm3-6b',
@@ -15,12 +16,16 @@ model_list = [
 def init_config():
     # 创建一个配置解析器对象
     config = configparser.ConfigParser()
-    config.read('.env')
+    config.read('.env.tpl')
 
     # 项目目录
     os.environ['PRJ_DIR'] = config.get('prj', 'dir')
     if not os.environ['PRJ_DIR']:
         raise ValueError('没有设置项目路径')
+
+    # 配置 dify 环境变量
+    os.environ['DIFY_BASE_URL'] = config.get('dify', 'base_url')
+    os.environ['DIFY_API_KEY'] = config.get('dify', 'api_key')
 
     # 配置 openai 环境变量
     os.environ['OPENAI_BASE_URL'] = config.get('openai', 'base_url')

@@ -26,8 +26,47 @@ def analyse_project(prj_path, progress=gr.Progress()):
 
         response = gpt_server.request_llm(sys_prompt, [(user_prompt, None)])
         llm_response[file_name] = next(response)
+        while True:
+            try:
+                r = next(response)
+                if r:
+                    llm_response[file_name] += r
+            except StopIteration:
+                break
 
-    return '阅读完成'
+    llm_response_str = '    \n   <br>'.join([f"## {k}:   \n <br>{v}" for k, v in llm_response.items()])
+    print(llm_response_str)
+    return llm_response_str
+
+def analyse_project_generate(prj_path, progress=gr.Progress()):
+    global llm_response
+    llm_response = {}
+    file_list = utils.get_all_files_in_folder(prj_path)
+
+    for i, file_name in enumerate(file_list):
+        relative_file_name = file_name.replace(prj_path, '.')
+        progress(i / len(file_list), desc=f'正在阅读：{relative_file_name}')
+
+        with open(file_name, 'r', encoding='utf-8') as f:
+            file_content = f.read()
+
+        sys_prompt = "你是一位资深的程序员，正在帮一位新手程序员阅读某个开源项目，我会把每个文件的内容告诉你，" \
+                     "你需要做一个新手程序员阅读的，简单明了的总结。用MarkDown格式返回（必要的话可以用emoji表情增加趣味性）"
+        user_prompt = f"源文件路径：{relative_file_name}，源代码：\n```\n{file_content}```"
+
+        response = gpt_server.request_llm(sys_prompt, [(user_prompt, None)])
+        llm_response[file_name] = next(response)
+        while True:
+            try:
+                r = next(response)
+                if r:
+                    llm_response[file_name] += r
+            except StopIteration:
+                break
+
+        llm_response_str = f"## {file_name}:   \n <br>{llm_response[file_name]}" 
+        print(llm_response_str)
+        yield llm_response_str
 
 
 def get_lang_from_file(file_name):

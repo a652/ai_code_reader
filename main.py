@@ -21,9 +21,9 @@ def main(prj_dir):
         overflow-y: scroll;
     }
     """
-    with gr.Blocks(title="程序员好基友", theme=gr.themes.Soft(), analytics_enabled=False, css=css) as demo:
+    with gr.Blocks(title="程序员学习助手", theme=gr.themes.Soft(), analytics_enabled=False, css=css) as demo:
         prj_name_tb = gr.Textbox(value=f'{prj_dir}', visible=False)  # 没有实际含义
-        with gr.Accordion(label='选择模型（选择开源大模型，如果本地没有，会自动下载，下载完毕后再使用下面的功能）'):
+        with gr.Accordion(label='选择模型'):
             model_selector = gr.Dropdown(choices=config.model_list, container=False, elem_id='box_shad')
         with gr.Row():
             prj_fe = gr.FileExplorer(label='项目文件', root=prj_dir, file_count='single', scale=1)
@@ -39,7 +39,10 @@ def main(prj_dir):
                 dir_submit_btn = gr.Button('阅读项目', variant='primary')
 
             with gr.Row():
-                label = gr.Label(label="源码阅读进度", value='等待开始...')
+                label = gr.Label(label="源码阅读进度")
+            # 监听阅读按钮
+            dir_submit_btn.click(gr_funcs.analyse_project, inputs=[prj_name_tb], outputs=[gr.Markdown()])
+
 
         with gr.Accordion(label='对话模式', open=False):
             with gr.Tab('论文改写助手'):
@@ -85,8 +88,6 @@ def main(prj_dir):
         # 模型选择
         model_selector.select(gr_funcs.model_change, inputs=[model_selector], outputs=[model_selector])
 
-        # 监听阅读按钮
-        dir_submit_btn.click(gr_funcs.analyse_project, inputs=[prj_name_tb], outputs=[label])
         # 监听文件点击按钮
         prj_fe.change(gr_funcs.view_prj_file, inputs=[prj_fe], outputs=[code, gpt_label, gpt_md])
 
